@@ -1,0 +1,98 @@
+import java.sql.*;
+import java.util.Scanner;
+
+class MenuItem {
+    private int id;
+    private String name;
+    private double price;
+
+    public MenuItem(int id, String name, double price) {
+        this.id = id;
+        this.name = name;
+        this.price = price;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public double getPrice() {
+        return price;
+    }
+}
+
+interface MenuItemDAO {
+    void addMenuItem(MenuItem menuItem) throws SQLException;
+    void updateMenuItem(MenuItem menuItem) throws SQLException;
+    void deleteMenuItem(int id) throws SQLException;
+    MenuItem getMenuItem(int id) throws SQLException;
+}
+
+class OracleMenuItemDAO implements MenuItemDAO {
+    private static final String DB_URL = "jdbc:oracle:thin:@localhost:1521:XE";
+    private static final String DB_USER = "your_username";
+    private static final String DB_PASSWORD = "your_password";
+
+    public void addMenuItem(MenuItem menuItem) throws SQLException {
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+             PreparedStatement stmt = conn.prepareStatement("INSERT INTO menu_items (id, name, price) VALUES (?, ?, ?)")) {
+            stmt.setInt(1, menuItem.getId());
+            stmt.setString(2, menuItem.getName());
+            stmt.setDouble(3, menuItem.getPrice());
+            int rowsAffected = stmt.executeUpdate();
+            if (rowsAffected > 0) {
+                System.out.println("Menu item added successfully.");
+            } else {
+                System.out.println("Failed to add menu item.");
+            }
+        }
+    }
+
+    public void updateMenuItem(MenuItem menuItem) throws SQLException {
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+             PreparedStatement stmt = conn.prepareStatement("UPDATE menu_items SET name = ?, price = ? WHERE id = ?")) {
+            stmt.setString(1, menuItem.getName());
+            stmt.setDouble(2, menuItem.getPrice());
+            stmt.setInt(3, menuItem.getId());
+            int rowsAffected = stmt.executeUpdate();
+            if (rowsAffected > 0) {
+                System.out.println("Menu item updated successfully.");
+            } else {
+                System.out.println("Failed to update menu item.");
+            }
+        }
+    }
+
+    public void deleteMenuItem(int id) throws SQLException {
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+             PreparedStatement stmt = conn.prepareStatement("DELETE FROM menu_items WHERE id = ?")) {
+            stmt.setInt(1, id);
+            int rowsAffected = stmt.executeUpdate();
+            if (rowsAffected > 0) {
+                System.out.println("Menu item deleted successfully.");
+            } else {
+                System.out.println("Failed to delete menu item.");
+            }
+        }
+    }
+
+    public MenuItem getMenuItem(int id) throws SQLException 
+{
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+             PreparedStatement stmt = conn.prepareStatement("SELECT id, name, price FROM menu_items WHERE id = ?"))
+ {
+            stmt.setInt(1, id);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) 
+{
+                int itemId = rs.getInt("id");
+                String name = rs.getString("name");
+                double price = rs.getDouble("price");
+                return new MenuItem(itemId, name, price);
+}
+}
+}
